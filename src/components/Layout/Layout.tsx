@@ -2,9 +2,7 @@ import React from 'react'
 import { Box } from '@mui/material'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../store/store'
-import Header from './Header'
 import Sidebar from './Sidebar'
-import MainContent from './MainContent'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -15,11 +13,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
-      <Header />
       <Sidebar open={sidebarOpen} />
-      <MainContent sidebarOpen={sidebarOpen}>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          minHeight: '100vh',
+        }}
+      >
         {children}
-      </MainContent>
+      </Box>
     </Box>
   )
 }

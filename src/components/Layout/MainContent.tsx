@@ -17,7 +17,7 @@ const MainContent: React.FC<MainContentProps> = ({ children, sidebarOpen }) => {
         ml: sidebarOpen ? '240px' : 0,
         transition: 'margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
         minHeight: 'calc(100vh - 64px)',
-        backgroundColor: '#0a0e1a',
+        backgroundColor: '#1a2332',
         backgroundImage: `
           radial-gradient(circle at 25% 25%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
           radial-gradient(circle at 75% 75%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),

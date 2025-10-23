@@ -17,6 +17,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../store/store'
 import { toggleSidebar } from '../../store/slices/uiSlice'
+import ThemeToggle from '../ThemeToggle'
 
 const Header: React.FC = () => {
   const dispatch = useDispatch()
@@ -37,7 +38,7 @@ const Header: React.FC = () => {
       elevation={0}
       sx={{ 
         zIndex: 1300,
-        background: 'linear-gradient(90deg, #0a0e1a 0%, #1a1f2e 50%, #0a0e1a 100%)',
+        background: 'linear-gradient(90deg, #1a2332 0%, #2a3441 50%, #1a2332 100%)',
         borderBottom: '2px solid #00d4ff',
         backdropFilter: 'blur(20px)',
         boxShadow: '0 0 20px rgba(0, 212, 255, 0.3)',
@@ -121,6 +122,8 @@ const Header: React.FC = () => {
             </Badge>
           </IconButton>
 
+          <ThemeToggle />
+
           <IconButton
             onClick={handleMenuOpen}
             aria-label="account menu"
@@ -150,7 +153,7 @@ const Header: React.FC = () => {
             }}
             PaperProps={{
               sx: {
-                backgroundColor: '#1a1f2e',
+                backgroundColor: '#2a3441',
                 border: '1px solid rgba(0, 212, 255, 0.3)',
                 boxShadow: '0 0 20px rgba(0, 212, 255, 0.2)',
               }

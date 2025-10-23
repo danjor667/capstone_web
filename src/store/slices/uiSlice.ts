@@ -17,7 +17,7 @@ interface Notification {
 const initialState: UIState = {
   sidebarOpen: true,
   selectedView: '3d',
-  theme: 'light',
+  theme: 'dark',
   notifications: [],
 }
 

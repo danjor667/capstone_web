@@ -44,7 +44,7 @@ const Visualization: React.FC = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ p: 3, background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%)', border: '1px solid rgba(0, 212, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)', mb: 3 }}>
+      <Paper sx={{ p: 3, background: 'linear-gradient(135deg, #2a3441 0%, #3d4a5c 100%)', border: '1px solid rgba(0, 212, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)', mb: 3 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={4}>
             <Box sx={{ p: 2, background: 'rgba(0, 212, 255, 0.05)', border: '1px solid rgba(0, 212, 255, 0.2)', borderRadius: 1 }}>
@@ -79,7 +79,7 @@ const Visualization: React.FC = () => {
         </Grid>
       </Paper>
 
-      <Paper sx={{ background: 'linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 100%)', border: '1px solid rgba(0, 212, 255, 0.3)', boxShadow: '0 0 30px rgba(0, 212, 255, 0.1)', height: '600px', borderRadius: 2, overflow: 'hidden' }}>
+      <Paper sx={{ background: 'linear-gradient(135deg, #1a2332 0%, #2a3441 100%)', border: '1px solid rgba(0, 212, 255, 0.3)', boxShadow: '0 0 30px rgba(0, 212, 255, 0.1)', height: '600px', borderRadius: 2, overflow: 'hidden' }}>
         <Scene
           patientData={{
             kidneyMetrics: {

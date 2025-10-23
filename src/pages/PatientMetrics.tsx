@@ -84,7 +84,7 @@ const PatientMetrics: React.FC = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ flex: 1, p: 2, background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%)', border: '1px solid rgba(0, 212, 255, 0.3)', boxShadow: '0 0 30px rgba(0, 212, 255, 0.1)', overflow: 'auto' }}>
+      <Paper sx={{ flex: 1, p: 2, background: 'linear-gradient(135deg, #2a3441 0%, #3d4a5c 100%)', border: '1px solid rgba(0, 212, 255, 0.3)', boxShadow: '0 0 30px rgba(0, 212, 255, 0.1)', overflow: 'auto' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={1.5}>
             <Grid item xs={12} sm={6} md={3}>
@@ -199,7 +199,7 @@ const PatientMetrics: React.FC = () => {
         </form>
 
         {prediction && (
-          <Paper sx={{ mt: 2, p: 2, background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%)', border: '2px solid #00ff88', boxShadow: '0 0 30px rgba(0, 255, 136, 0.2)' }}>
+          <Paper sx={{ mt: 2, p: 2, background: 'linear-gradient(135deg, #2a3441 0%, #3d4a5c 100%)', border: '2px solid #00ff88', boxShadow: '0 0 30px rgba(0, 255, 136, 0.2)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#00ff88', mr: 1.5, boxShadow: '0 0 15px #00ff88' }} />
               <Typography variant="h6" sx={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 700, fontSize: '1rem' }}>

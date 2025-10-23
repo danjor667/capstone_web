@@ -13,7 +13,6 @@ const Scene: React.FC<SceneProps> = ({ patientData }) => {
     <Box sx={{ 
       width: '100%', 
       height: '100%',
-      minHeight: '800px',
       position: 'relative', 
       borderRadius: 2, 
       overflow: 'hidden',
@@ -21,11 +20,10 @@ const Scene: React.FC<SceneProps> = ({ patientData }) => {
       border: '1px solid rgba(0, 212, 255, 0.2)'
     }}>
       <Canvas
-        camera={{ position: [0, 0, 10], fov: 60 }}
+        camera={{ position: [0, 0, 8], fov: 60 }}
         style={{ background: '#1a1f2e', width: '100%', height: '100%' }}
       >
         <Suspense fallback={null}>
-          {/* Realistic medical lighting */}
           <ambientLight intensity={0.6} color="#ffffff" />
           <directionalLight
             position={[10, 10, 5]}
@@ -40,15 +38,7 @@ const Scene: React.FC<SceneProps> = ({ patientData }) => {
           />
           <pointLight position={[0, 8, 3]} intensity={1} color="#ffffff" />
           <pointLight position={[0, -3, 3]} intensity={0.5} color="#00d4ff" />
-          <spotLight
-            position={[0, 10, 0]}
-            angle={0.6}
-            penumbra={0.5}
-            intensity={0.8}
-            castShadow
-          />
           
-          {/* Ground plane for shadows */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.5, 0]} receiveShadow>
             <planeGeometry args={[20, 20]} />
             <meshStandardMaterial
@@ -58,21 +48,23 @@ const Scene: React.FC<SceneProps> = ({ patientData }) => {
             />
           </mesh>
           
-          <BasicKidney patientData={patientData} />
+          <group position={[0, 0, 0]}>
+            <BasicKidney patientData={patientData} />
+          </group>
           
           <OrbitControls
             enablePan={true}
             enableZoom={true}
             enableRotate={true}
             minDistance={5}
-            maxDistance={20}
+            maxDistance={15}
             autoRotate={true}
             autoRotateSpeed={0.5}
+            target={[0, 0, 0]}
           />
         </Suspense>
       </Canvas>
       
-      {/* Loading State */}
       <Box
         sx={{
           position: 'absolute',
