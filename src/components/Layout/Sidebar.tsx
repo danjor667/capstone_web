@@ -19,12 +19,15 @@ import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
   AccountCircle,
+  Logout,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../store/store'
 import { toggleSidebar } from '../../store/slices/uiSlice'
 import ThemeToggle from '../ThemeToggle'
+import ConnectionStatus from '../common/ConnectionStatus'
+import AuthService from '../../services/authService'
 
 interface SidebarProps {
   open: boolean
@@ -45,6 +48,11 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
   const location = useLocation()
   const dispatch = useDispatch()
   const themeMode = useSelector((state: RootState) => state.ui.theme)
+
+  const handleLogout = () => {
+    AuthService.logout()
+    window.location.href = '/login'
+  }
 
   return (
     <Drawer
@@ -85,6 +93,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
         <ThemeToggle />
         <IconButton size="small" sx={{ color: themeMode === 'dark' ? '#00d4ff' : '#64748b' }}>
           <AccountCircle />
+        </IconButton>
+        <IconButton size="small" onClick={handleLogout} sx={{ color: themeMode === 'dark' ? '#ff4757' : '#ef4444' }}>
+          <Logout />
         </IconButton>
       </Box>
       
@@ -150,11 +161,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
         <Typography variant="caption" sx={{ color: themeMode === 'dark' ? '#94a3b8' : '#64748b', fontFamily: 'monospace', display: 'block', mb: 1 }}>
           SYSTEM STATUS
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#00ff88', mr: 1, boxShadow: '0 0 8px #00ff88' }} />
-          <Typography variant="caption" sx={{ color: '#00ff88', fontFamily: 'monospace' }}>ONLINE</Typography>
-        </Box>
-        <Typography variant="caption" sx={{ color: themeMode === 'dark' ? '#94a3b8' : '#64748b', fontFamily: 'monospace' }}>
+        <ConnectionStatus />
+        <Typography variant="caption" sx={{ color: themeMode === 'dark' ? '#94a3b8' : '#64748b', fontFamily: 'monospace', mt: 1, display: 'block' }}>
           Last sync: 2m ago
         </Typography>
       </Box>

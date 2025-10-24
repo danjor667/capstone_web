@@ -1,29 +1,72 @@
-import React from 'react'
-import { Grid, Card, CardContent, Typography, Box, LinearProgress, Chip, Avatar } from '@mui/material'
+import React, { useEffect } from 'react'
+import { Grid, Card, CardContent, Typography, Box, LinearProgress, Chip, Avatar, CircularProgress } from '@mui/material'
 import { TrendingDown, Warning, CheckCircle, Person } from '@mui/icons-material'
 import { useSelector } from 'react-redux'
 import { RootState } from '../store/store'
+import { useGetPatientsQuery, useGetKidneyMetricsQuery, useGetAlertsQuery } from '../services/api'
+import { wsService } from '../services/websocket'
 import Scene from '../components/3d/Scene'
 
 const Dashboard: React.FC = () => {
   const themeMode = useSelector((state: RootState) => state.ui.theme)
   
-  const patientData = {
-    kidneyMetrics: {
-      eGFR: 45,
-      creatinine: 2.1,
-      proteinuria: 150,
-      bloodPressure: { systolic: 140, diastolic: 90 },
-      stage: 3 as const,
-      progression: {
-        trend: 'declining' as const,
-        rateOfChange: -2.5,
-        predictedStage: 4 as const,
-        timeToNextStage: 18,
-        riskFactors: []
-      },
-      lastUpdated: new Date().toISOString()
+  // Fetch real data from backend
+  const { data: patients, isLoading: patientsLoading } = useGetPatientsQuery()
+  const currentPatient = patients?.[0] // Use first patient for demo
+  const { data: kidneyMetrics, isLoading: metricsLoading } = useGetKidneyMetricsQuery(
+    currentPatient?.id || '', 
+    { skip: !currentPatient?.id }
+  )
+  const { data: alerts } = useGetAlertsQuery(
+    currentPatient?.id || '', 
+    { skip: !currentPatient?.id }
+  )
+
+  // Mock kidney metrics if none exist
+  const mockKidneyMetrics = {
+    eGFR: 45,
+    creatinine: 2.1,
+    proteinuria: 150,
+    bloodPressure: { systolic: 140, diastolic: 90 },
+    stage: 3 as const,
+    progression: {
+      trend: 'declining' as const,
+      rateOfChange: -2.5,
+      predictedStage: 4 as const,
+      timeToNextStage: 18,
+      riskFactors: []
+    },
+    lastUpdated: new Date().toISOString()
+  }
+
+  const displayMetrics = kidneyMetrics || mockKidneyMetrics
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    wsService.connect()
+    if (currentPatient?.id) {
+      wsService.subscribeToPatient(currentPatient.id)
     }
+    
+    return () => {
+      wsService.unsubscribeFromPatient()
+    }
+  }, [currentPatient?.id])
+
+  if (patientsLoading || metricsLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (!currentPatient) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h6">No patient data available</Typography>
+      </Box>
+    )
   }
 
   return (
@@ -82,35 +125,31 @@ const Dashboard: React.FC = () => {
                   color: themeMode === 'dark' ? '#fff' : '#1e293b', 
                   fontWeight: 700, 
                   mb: 0.5 
-                }}>John Doe</Typography>
+                }}>
+                  {currentPatient.demographics.firstName} {currentPatient.demographics.lastName}
+                </Typography>
                 <Typography variant="body1" sx={{ 
                   color: themeMode === 'dark' ? '#94a3b8' : '#64748b', 
                   mb: 1 
-                }}>Patient ID: CKD-001 • Age: 65 • Male • DOB: 03/15/1959</Typography>
+                }}>
+                  Patient ID: {currentPatient.id} • Age: {new Date().getFullYear() - new Date(currentPatient.demographics.dateOfBirth).getFullYear()} • {currentPatient.demographics.gender}
+                </Typography>
                 <Typography variant="body2" sx={{ 
                   color: themeMode === 'dark' ? '#64748b' : '#94a3b8', 
                   mb: 2 
-                }}>📧 john.doe@email.com • 📞 (555) 123-4567</Typography>
+                }}>
+                  📧 {currentPatient.demographics.contactInfo.email} • 📞 {currentPatient.demographics.contactInfo.phone}
+                </Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Chip label="Stage 3 CKD" sx={{ 
+                  <Chip label={`Stage ${displayMetrics.stage} CKD`} sx={{ 
                     bgcolor: themeMode === 'dark' ? 'rgba(255,170,0,0.2)' : 'rgba(255,170,0,0.1)', 
                     color: '#ffaa00', 
                     border: themeMode === 'dark' ? '1px solid rgba(255,170,0,0.3)' : '1px solid rgba(255,170,0,0.2)'
                   }} size="small" />
-                  <Chip label="High Risk" sx={{ 
+                  <Chip label={displayMetrics.progression?.trend === 'declining' ? 'High Risk' : 'Stable'} sx={{ 
                     bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.2)' : 'rgba(255,71,87,0.1)', 
                     color: '#ff4757', 
                     border: themeMode === 'dark' ? '1px solid rgba(255,71,87,0.3)' : '1px solid rgba(255,71,87,0.2)'
-                  }} size="small" />
-                  <Chip label="Diabetes" sx={{ 
-                    bgcolor: themeMode === 'dark' ? 'rgba(255,107,53,0.2)' : 'rgba(255,107,53,0.1)', 
-                    color: '#ff6b35', 
-                    border: themeMode === 'dark' ? '1px solid rgba(255,107,53,0.3)' : '1px solid rgba(255,107,53,0.2)'
-                  }} size="small" />
-                  <Chip label="Hypertension" sx={{ 
-                    bgcolor: themeMode === 'dark' ? 'rgba(139,69,19,0.2)' : 'rgba(139,69,19,0.1)', 
-                    color: '#8b4513', 
-                    border: themeMode === 'dark' ? '1px solid rgba(139,69,19,0.3)' : '1px solid rgba(139,69,19,0.2)'
                   }} size="small" />
                 </Box>
               </Box>
@@ -121,15 +160,9 @@ const Dashboard: React.FC = () => {
                     textTransform: 'uppercase', 
                     letterSpacing: 1 
                   }}>Last Updated</Typography>
-                  <Typography variant="body1" sx={{ color: '#00d4ff', fontWeight: 600 }}>2 hours ago</Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="caption" sx={{ 
-                    color: themeMode === 'dark' ? '#64748b' : '#94a3b8', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: 1 
-                  }}>Next Appointment</Typography>
-                  <Typography variant="body2" sx={{ color: '#00ff88', fontWeight: 600 }}>Dec 15, 2024</Typography>
+                  <Typography variant="body1" sx={{ color: '#00d4ff', fontWeight: 600 }}>
+                    {new Date(displayMetrics.lastUpdated).toLocaleTimeString()}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
                   <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#00ff88', boxShadow: '0 0 10px #00ff88' }} />
@@ -154,13 +187,13 @@ const Dashboard: React.FC = () => {
               }}>
                 <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
                   <Box sx={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', bgcolor: '#ffaa00', boxShadow: '0 0 10px #ffaa00' }} />
-                  <Typography variant="h3" sx={{ color: '#ffaa00', fontWeight: 700, mb: 1 }}>{patientData.kidneyMetrics.eGFR}</Typography>
+                  <Typography variant="h3" sx={{ color: '#ffaa00', fontWeight: 700, mb: 1 }}>{displayMetrics.eGFR}</Typography>
                   <Typography variant="caption" sx={{ 
                     color: themeMode === 'dark' ? '#94a3b8' : '#64748b', 
                     textTransform: 'uppercase', 
                     letterSpacing: 1 
                   }}>eGFR (mL/min/1.73m²)</Typography>
-                  <LinearProgress variant="determinate" value={37} sx={{ 
+                  <LinearProgress variant="determinate" value={(displayMetrics.eGFR / 120) * 100} sx={{ 
                     mt: 2, 
                     bgcolor: themeMode === 'dark' ? 'rgba(255,170,0,0.1)' : 'rgba(255,170,0,0.08)', 
                     '& .MuiLinearProgress-bar': { bgcolor: '#ffaa00' } 
@@ -179,13 +212,13 @@ const Dashboard: React.FC = () => {
               }}>
                 <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
                   <Box sx={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', bgcolor: '#ff4757', boxShadow: '0 0 10px #ff4757' }} />
-                  <Typography variant="h3" sx={{ color: '#ff4757', fontWeight: 700, mb: 1 }}>{patientData.kidneyMetrics.creatinine}</Typography>
+                  <Typography variant="h3" sx={{ color: '#ff4757', fontWeight: 700, mb: 1 }}>{displayMetrics.creatinine}</Typography>
                   <Typography variant="caption" sx={{ 
                     color: themeMode === 'dark' ? '#94a3b8' : '#64748b', 
                     textTransform: 'uppercase', 
                     letterSpacing: 1 
                   }}>Creatinine (mg/dL)</Typography>
-                  <LinearProgress variant="determinate" value={85} sx={{ 
+                  <LinearProgress variant="determinate" value={(displayMetrics.creatinine / 5) * 100} sx={{ 
                     mt: 2, 
                     bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.08)', 
                     '& .MuiLinearProgress-bar': { bgcolor: '#ff4757' } 
@@ -204,13 +237,13 @@ const Dashboard: React.FC = () => {
               }}>
                 <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
                   <Box sx={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', bgcolor: '#ff6b35', boxShadow: '0 0 10px #ff6b35' }} />
-                  <Typography variant="h3" sx={{ color: '#ff6b35', fontWeight: 700, mb: 1 }}>{patientData.kidneyMetrics.proteinuria}</Typography>
+                  <Typography variant="h3" sx={{ color: '#ff6b35', fontWeight: 700, mb: 1 }}>{displayMetrics.proteinuria}</Typography>
                   <Typography variant="caption" sx={{ 
                     color: themeMode === 'dark' ? '#94a3b8' : '#64748b', 
                     textTransform: 'uppercase', 
                     letterSpacing: 1 
                   }}>Proteinuria (mg/g)</Typography>
-                  <LinearProgress variant="determinate" value={60} sx={{ 
+                  <LinearProgress variant="determinate" value={(displayMetrics.proteinuria / 500) * 100} sx={{ 
                     mt: 2, 
                     bgcolor: themeMode === 'dark' ? 'rgba(255,107,53,0.1)' : 'rgba(255,107,53,0.08)', 
                     '& .MuiLinearProgress-bar': { bgcolor: '#ff6b35' } 
@@ -230,14 +263,14 @@ const Dashboard: React.FC = () => {
                 <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
                   <Box sx={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: '50%', bgcolor: '#00d4ff', boxShadow: '0 0 10px #00d4ff' }} />
                   <Typography variant="h4" sx={{ color: '#00d4ff', fontWeight: 700, mb: 1 }}>
-                    {patientData.kidneyMetrics.bloodPressure.systolic}/{patientData.kidneyMetrics.bloodPressure.diastolic}
+                    {displayMetrics.bloodPressure?.systolic}/{displayMetrics.bloodPressure?.diastolic}
                   </Typography>
                   <Typography variant="caption" sx={{ 
                     color: themeMode === 'dark' ? '#94a3b8' : '#64748b', 
                     textTransform: 'uppercase', 
                     letterSpacing: 1 
                   }}>Blood Pressure (mmHg)</Typography>
-                  <LinearProgress variant="determinate" value={70} sx={{ 
+                  <LinearProgress variant="determinate" value={(displayMetrics.bloodPressure?.systolic / 200) * 100} sx={{ 
                     mt: 2, 
                     bgcolor: themeMode === 'dark' ? 'rgba(0,212,255,0.1)' : 'rgba(0,212,255,0.08)', 
                     '& .MuiLinearProgress-bar': { bgcolor: '#00d4ff' } 
@@ -273,7 +306,7 @@ const Dashboard: React.FC = () => {
                 <Chip label="Real-time" color="success" size="small" />
               </Box>
               <Box sx={{ height: 'calc(100% - 64px)' }}>
-                <Scene patientData={patientData} />
+                <Scene patientData={{ kidneyMetrics: displayMetrics }} />
               </Box>
             </CardContent>
           </Card>
@@ -297,24 +330,27 @@ const Dashboard: React.FC = () => {
                     <Warning /> Critical Alerts
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.05)', 
-                      borderRadius: 1, 
-                      border: themeMode === 'dark' ? '1px solid rgba(255,71,87,0.2)' : '1px solid rgba(255,71,87,0.1)'
-                    }}>
-                      <Typography variant="body2" sx={{ color: '#ff4757', fontWeight: 600 }}>High Creatinine</Typography>
-                      <Typography variant="caption" color="text.secondary">Levels above normal range</Typography>
-                    </Box>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: themeMode === 'dark' ? 'rgba(255,170,0,0.1)' : 'rgba(255,170,0,0.05)', 
-                      borderRadius: 1, 
-                      border: themeMode === 'dark' ? '1px solid rgba(255,170,0,0.2)' : '1px solid rgba(255,170,0,0.1)'
-                    }}>
-                      <Typography variant="body2" sx={{ color: '#ffaa00', fontWeight: 600 }}>eGFR Declining</Typography>
-                      <Typography variant="caption" color="text.secondary">-2.5 mL/min/month trend</Typography>
-                    </Box>
+                    {alerts?.slice(0, 3).map((alert) => (
+                      <Box key={alert.id} sx={{ 
+                        p: 2, 
+                        bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.05)', 
+                        borderRadius: 1, 
+                        border: themeMode === 'dark' ? '1px solid rgba(255,71,87,0.2)' : '1px solid rgba(255,71,87,0.1)'
+                      }}>
+                        <Typography variant="body2" sx={{ color: '#ff4757', fontWeight: 600 }}>{alert.title}</Typography>
+                        <Typography variant="caption" color="text.secondary">{alert.message}</Typography>
+                      </Box>
+                    )) || (
+                      <Box sx={{ 
+                        p: 2, 
+                        bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.05)', 
+                        borderRadius: 1, 
+                        border: themeMode === 'dark' ? '1px solid rgba(255,71,87,0.2)' : '1px solid rgba(255,71,87,0.1)'
+                      }}>
+                        <Typography variant="body2" sx={{ color: '#ff4757', fontWeight: 600 }}>High Creatinine</Typography>
+                        <Typography variant="caption" color="text.secondary">Levels above normal range</Typography>
+                      </Box>
+                    )}
                   </Box>
                 </CardContent>
               </Card>
@@ -340,26 +376,10 @@ const Dashboard: React.FC = () => {
                       <Box>
                         <Typography variant="body2" sx={{ 
                           color: themeMode === 'dark' ? '#fff' : '#1e293b' 
-                        }}>Lab Results Updated</Typography>
-                        <Typography variant="caption" color="text.secondary">2 hours ago</Typography>
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#00d4ff' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ 
-                          color: themeMode === 'dark' ? '#fff' : '#1e293b' 
-                        }}>Medication Adjusted</Typography>
-                        <Typography variant="caption" color="text.secondary">1 day ago</Typography>
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#ffaa00' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ 
-                          color: themeMode === 'dark' ? '#fff' : '#1e293b' 
-                        }}>Follow-up Scheduled</Typography>
-                        <Typography variant="caption" color="text.secondary">3 days ago</Typography>
+                        }}>Patient Data Loaded</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date().toLocaleString()}
+                        </Typography>
                       </Box>
                     </Box>
                   </Box>
