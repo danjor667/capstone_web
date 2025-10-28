@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { 
   Grid, Card, CardContent, Typography, Box, Avatar, Chip, CircularProgress, 
-  Button, IconButton, Divider, List, ListItem, ListItemText, Alert
+  Button, IconButton, List, ListItem, ListItemText, Alert
 } from '@mui/material'
 import { 
-  Person, ArrowBack, Edit, Add, Favorite, Timeline, 
-  LocalHospital, Medication, Science, Analytics 
+  Person, ArrowBack, Edit, Add, Favorite, 
+  LocalHospital, Medication, Science 
 } from '@mui/icons-material'
 import { 
   useGetPatientQuery, useGetKidneyMetricsQuery, useGetVitalsQuery, 
@@ -25,7 +25,7 @@ const PatientDetail: React.FC = () => {
   const { data: kidneyMetrics } = useGetKidneyMetricsQuery(id || '', { skip: !id })
   const { data: vitals } = useGetVitalsQuery(id || '', { skip: !id })
   const { data: medications } = useGetMedicationsQuery(id || '', { skip: !id })
-  const { data: prediction } = useGetMLPredictionQuery(id || '', { skip: !id })
+  useGetMLPredictionQuery(id || '', { skip: !id })
   
   const [showMetricsForm, setShowMetricsForm] = useState(false)
   const [showVitalsForm, setShowVitalsForm] = useState(false)

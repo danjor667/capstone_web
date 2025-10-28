@@ -1,40 +1,18 @@
 import React from 'react'
-import { Box, Typography, Card, CardContent, Chip, Divider } from '@mui/material'
+import { Box, Typography, Card, CardContent, Chip, Divider, CircularProgress } from '@mui/material'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../store/store'
+import { useGetMLPredictionHistoryQuery } from '../../services/api'
 
 interface PredictionHistoryProps {
   patientId: string
 }
 
-interface HistoryItem {
-  id: string
-  timestamp: string
-  stage: number
-  risk_level: string
-  confidence: number
-}
+
 
 const PredictionHistory: React.FC<PredictionHistoryProps> = ({ patientId }) => {
   const themeMode = useSelector((state: RootState) => state.ui.theme)
-  
-  // Mock data - replace with actual API call
-  const predictions: HistoryItem[] = [
-    {
-      id: '1',
-      timestamp: '2024-01-15T10:30:00Z',
-      stage: 3,
-      risk_level: 'high',
-      confidence: 87.5
-    },
-    {
-      id: '2', 
-      timestamp: '2024-01-10T14:20:00Z',
-      stage: 3,
-      risk_level: 'medium',
-      confidence: 82.1
-    }
-  ]
+  const { data: predictions = [], isLoading, error } = useGetMLPredictionHistoryQuery(patientId)
 
   const getRiskColor = (riskLevel: string) => {
     switch (riskLevel?.toLowerCase()) {
@@ -60,37 +38,52 @@ const PredictionHistory: React.FC<PredictionHistoryProps> = ({ patientId }) => {
           Analysis History
         </Typography>
         
-        {predictions.length > 0 ? (
+        {isLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : error ? (
+          <Typography variant="body2" color="text.secondary">
+            Unable to load prediction history
+          </Typography>
+        ) : predictions.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {predictions.map((prediction, index) => (
+            {predictions.slice(0, 3).map((prediction, index) => (
               <Box key={prediction.id}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {new Date(prediction.timestamp).toLocaleDateString()}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Chip
-                      label={`Stage ${prediction.stage}`}
-                      size="small"
-                      sx={{
-                        bgcolor: themeMode === 'dark' ? 'rgba(147,51,234,0.2)' : 'rgba(147,51,234,0.1)',
-                        color: '#9333ea'
-                      }}
-                    />
-                    <Chip
-                      label={prediction.risk_level.toUpperCase()}
-                      size="small"
-                      sx={{
-                        bgcolor: `${getRiskColor(prediction.risk_level)}20`,
-                        color: getRiskColor(prediction.risk_level),
-                        border: `1px solid ${getRiskColor(prediction.risk_level)}40`
-                      }}
-                    />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(prediction.created_at).toLocaleDateString()}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+                      {prediction.prediction_result}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Chip
+                        label={`Stage ${prediction.predicted_stage}`}
+                        size="small"
+                        sx={{
+                          bgcolor: themeMode === 'dark' ? 'rgba(147,51,234,0.2)' : 'rgba(147,51,234,0.1)',
+                          color: '#9333ea'
+                        }}
+                      />
+                      <Chip
+                        label={prediction.risk_level.toUpperCase()}
+                        size="small"
+                        sx={{
+                          bgcolor: `${getRiskColor(prediction.risk_level)}20`,
+                          color: getRiskColor(prediction.risk_level),
+                          border: `1px solid ${getRiskColor(prediction.risk_level)}40`
+                        }}
+                      />
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      {prediction.confidence}% confidence
+                    </Typography>
                   </Box>
                 </Box>
-                <Typography variant="caption" color="text.secondary">
-                  Confidence: {prediction.confidence}%
-                </Typography>
                 {index < predictions.length - 1 && <Divider sx={{ mt: 2 }} />}
               </Box>
             ))}

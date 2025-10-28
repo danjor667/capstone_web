@@ -39,8 +39,8 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
       setFormData({
         firstName: patient.demographics.firstName,
         lastName: patient.demographics.lastName,
-        email: patient.demographics.contactInfo.email,
-        phone: patient.demographics.contactInfo.phone,
+        email: patient.demographics.contactInfo.email || '',
+        phone: patient.demographics.contactInfo.phone || '',
         dateOfBirth: patient.demographics.dateOfBirth,
         gender: patient.demographics.gender,
         address: patient.demographics.contactInfo.address || '',
@@ -64,15 +64,19 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
       await updatePatient({
         id: patient.id,
         data: {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          date_of_birth: formData.dateOfBirth,
-          gender: formData.gender,
-          address: formData.address,
-          emergency_contact: formData.emergencyContact
-        }
+          demographics: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            dateOfBirth: formData.dateOfBirth,
+            gender: formData.gender,
+            contactInfo: {
+              email: formData.email,
+              phone: formData.phone,
+              address: formData.address,
+              emergencyContact: formData.emergencyContact
+            }
+          }
+        } as Partial<PatientData>
       }).unwrap()
       
       onSuccess()
@@ -88,8 +92,8 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
       setFormData({
         firstName: patient.demographics.firstName,
         lastName: patient.demographics.lastName,
-        email: patient.demographics.contactInfo.email,
-        phone: patient.demographics.contactInfo.phone,
+        email: patient.demographics.contactInfo.email || '',
+        phone: patient.demographics.contactInfo.phone || '',
         dateOfBirth: patient.demographics.dateOfBirth,
         gender: patient.demographics.gender,
         address: patient.demographics.contactInfo.address || '',

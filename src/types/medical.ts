@@ -3,6 +3,7 @@ export type CKDStage = 1 | 2 | 3 | 4 | 5
 export interface KidneyMetrics {
   eGFR: number
   creatinine: number
+  bun?: number
   proteinuria: number
   bloodPressure: BloodPressure
   stage: CKDStage

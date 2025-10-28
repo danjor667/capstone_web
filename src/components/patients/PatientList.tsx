@@ -6,7 +6,7 @@ import {
 } from '@mui/material'
 import { 
   Search, Person, Add, MoreVert, Visibility, Edit, 
-  GridView, ViewList, FilterList 
+  GridView, ViewList 
 } from '@mui/icons-material'
 import { useGetPatientsQuery, useSearchPatientsQuery } from '../../services/api'
 import { PatientData } from '../../types/patient'
@@ -186,7 +186,7 @@ const PatientTableRow: React.FC<PatientCardProps> = ({ patient, onClick }) => {
         />
       </TableCell>
       <TableCell>
-        <IconButton size="small" onClick={(e) => { e.stopPropagation(); onClick(patient) }}>
+        <IconButton size="small" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onClick(patient) }}>
           <Visibility />
         </IconButton>
       </TableCell>

@@ -154,7 +154,9 @@ const BasicKidney: React.FC<BasicKidneyProps> = ({ patientData }) => {
     bloodFlowRefs.current.forEach((particle, i) => {
       if (particle) {
         particle.position.y = Math.sin(time * flowSpeed + i * 0.5) * 2
-        particle.material.opacity = (0.5 + Math.sin(time * 3 + i) * 0.3) * healthMetrics.bloodFlowIntensity
+        if ('opacity' in particle.material) {
+          particle.material.opacity = (0.5 + Math.sin(time * 3 + i) * 0.3) * healthMetrics.bloodFlowIntensity
+        }
       }
     })
   })

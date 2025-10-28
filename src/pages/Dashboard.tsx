@@ -4,7 +4,7 @@ import { Person, Visibility, Add, TrendingUp, Warning, LocalHospital } from '@mu
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { RootState } from '../store/store'
-import { useGetPatientsQuery } from '../services/api'
+import { useGetPatientsQuery, useGetMLModelMetricsQuery } from '../services/api'
 import { wsService } from '../services/websocket'
 
 const Dashboard: React.FC = () => {
@@ -12,6 +12,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   
   const { data: patients, isLoading } = useGetPatientsQuery()
+  const { data: mlMetrics } = useGetMLModelMetricsQuery()
 
   useEffect(() => {
     wsService.connect()
@@ -124,7 +125,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                    87%
+                    {mlMetrics?.performance?.accuracy ? `${mlMetrics.performance.accuracy.toFixed(1)}%` : '--'}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     AI Accuracy

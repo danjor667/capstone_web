@@ -5,7 +5,7 @@ import { KidneyMetrics, AlertData } from '../types/medical'
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+    baseUrl: (import.meta as any).env?.VITE_API_URL || 'https://capstone-project-yb98.onrender.com/api',
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('token')
       if (token) {
@@ -72,9 +72,9 @@ export const apiSlice = createApi({
       },
       providesTags: ['Patient'],
     }),
-    getPatient: builder.query<PatientData, string>({
+    getPatient: builder.query<PatientData | undefined, string>({
       query: (id) => `/patients/${id}/`,
-      transformResponse: (response: any) => {
+      transformResponse: (response: any): PatientData | undefined => {
         if (response.success && response.data) {
           const patient = response.data
           return {
@@ -96,11 +96,11 @@ export const apiSlice = createApi({
             updatedAt: patient.updated_at
           }
         }
-        return null
+        return undefined
       },
       providesTags: (_result, _error, id) => [{ type: 'Patient', id }],
     }),
-    createPatient: builder.mutation<PatientData, any>({
+    createPatient: builder.mutation<PatientData | undefined, any>({
       query: (patientData) => ({
         url: '/patients/',
         method: 'POST',
@@ -115,7 +115,7 @@ export const apiSlice = createApi({
           emergency_contact: patientData.emergencyContact
         },
       }),
-      transformResponse: (response: any) => {
+      transformResponse: (response: any): PatientData | undefined => {
         if (response.success && response.data) {
           const patient = response.data
           return {
@@ -137,7 +137,7 @@ export const apiSlice = createApi({
             updatedAt: patient.updated_at
           }
         }
-        return null
+        return undefined
       },
       invalidatesTags: ['Patient'],
     }),
@@ -151,21 +151,30 @@ export const apiSlice = createApi({
     }),
 
     // Kidney metrics endpoints
-    getKidneyMetrics: builder.query<KidneyMetrics, string>({
+    getKidneyMetrics: builder.query<KidneyMetrics | undefined, string>({
       query: (patientId) => `/patients/${patientId}/metrics/`,
-      transformResponse: (response: any) => {
+      transformResponse: (response: any): KidneyMetrics | undefined => {
         if (response.success && response.data) {
           return {
             eGFR: response.data.egfr,
             creatinine: response.data.creatinine,
             bun: response.data.bun,
+            proteinuria: response.data.proteinuria || 0,
+            bloodPressure: {
+              systolic: response.data.systolic_bp || 120,
+              diastolic: response.data.diastolic_bp || 80
+            },
             stage: response.data.stage,
-            trend: response.data.trend,
-            rateOfChange: response.data.rate_of_change,
+            progression: {
+              trend: response.data.trend,
+              rateOfChange: response.data.rate_of_change,
+              predictedStage: response.data.stage,
+              riskFactors: []
+            },
             lastUpdated: response.data.timestamp
           }
         }
-        return null
+        return undefined
       },
       providesTags: (_result, _error, patientId) => [{ type: 'KidneyMetrics', id: patientId }],
     }),
@@ -266,7 +275,7 @@ export const apiSlice = createApi({
 
     // ML prediction endpoints
     getMLPrediction: builder.query<any, string>({
-      query: (patientId) => `/patients/${patientId}/prediction/`,
+      query: (patientId) => `/ml/patients/${patientId}/prediction/`,
       transformResponse: (response: any) => {
         if (response.success && response.data) {
           return response.data
@@ -277,7 +286,7 @@ export const apiSlice = createApi({
     }),
     triggerMLAnalysis: builder.mutation<any, string>({
       query: (patientId) => ({
-        url: `/patients/${patientId}/analyze/`,
+        url: `/ml/patients/${patientId}/analyze/`,
         method: 'POST',
       }),
       transformResponse: (response: any) => {
@@ -287,6 +296,25 @@ export const apiSlice = createApi({
         return null
       },
       invalidatesTags: (_result, _error, patientId) => [{ type: 'MLPrediction', id: patientId }],
+    }),
+    getMLModelMetrics: builder.query<any, void>({
+      query: () => '/ml/model/metrics/',
+      transformResponse: (response: any) => {
+        if (response.success && response.data) {
+          return response.data
+        }
+        return null
+      },
+    }),
+    getMLPredictionHistory: builder.query<any[], string>({
+      query: (patientId) => `/ml/patients/${patientId}/predictions/history/`,
+      transformResponse: (response: any) => {
+        if (response.success && Array.isArray(response.data)) {
+          return response.data
+        }
+        return []
+      },
+      providesTags: (_result, _error, patientId) => [{ type: 'MLPrediction', id: `${patientId}-history` }],
     }),
     getRiskFactors: builder.query<any[], string>({
       query: (patientId) => `/patients/${patientId}/risk-factors/`,
@@ -310,7 +338,7 @@ export const apiSlice = createApi({
     // Alerts endpoints
     getAlerts: builder.query<AlertData[], string>({
       query: (patientId) => `/patients/${patientId}/alerts/`,
-      transformResponse: (response: any) => {
+      transformResponse: (response: any, _meta, patientId) => {
         if (response.success && Array.isArray(response.data)) {
           return response.data.map((alert: any) => ({
             id: alert.id,
@@ -399,6 +427,8 @@ export const {
   useAddVitalsMutation,
   useGetMLPredictionQuery,
   useTriggerMLAnalysisMutation,
+  useGetMLModelMetricsQuery,
+  useGetMLPredictionHistoryQuery,
   useGetRiskFactorsQuery,
   useGetTrendsQuery,
   useGetAlertsQuery,

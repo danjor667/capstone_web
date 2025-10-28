@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 class AuthService {
-  private static baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+  private static baseURL = (import.meta as any).env?.VITE_API_URL || 'https://capstone-project-yb98.onrender.com/api'
 
   static getToken(): string | null {
     return localStorage.getItem('token')

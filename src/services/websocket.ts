@@ -1,5 +1,6 @@
 import { store } from '../store/store'
 import { addNotification } from '../store/slices/uiSlice'
+import { apiSlice } from './api'
 
 class WebSocketService {
   private socket: WebSocket | null = null
@@ -27,7 +28,7 @@ class WebSocketService {
   }
 
   connect() {
-    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws/'
+    const wsUrl = (import.meta as any).env?.VITE_WS_URL || 'wss://capstone-project-yb98.onrender.com/ws/'
     const token = localStorage.getItem('token')
     
     if (!token) {
@@ -68,7 +69,7 @@ class WebSocketService {
     switch (data.type) {
       case 'patient_update':
         store.dispatch(
-          store.getState().api.util.invalidateTags([{ type: 'KidneyMetrics', id: data.patient_id }])
+          apiSlice.util.invalidateTags([{ type: 'KidneyMetrics', id: data.patient_id }])
         )
         break
       
@@ -81,13 +82,13 @@ class WebSocketService {
         }))
         
         store.dispatch(
-          store.getState().api.util.invalidateTags(['Alert'])
+          apiSlice.util.invalidateTags(['Alert'])
         )
         break
       
       case 'lab_result':
         store.dispatch(
-          store.getState().api.util.invalidateTags([{ type: 'LabResult', id: data.patient_id }])
+          apiSlice.util.invalidateTags([{ type: 'LabResult', id: data.patient_id }])
         )
         break
     }

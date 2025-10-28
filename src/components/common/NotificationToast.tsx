@@ -12,7 +12,7 @@ interface NotificationData {
 }
 
 const NotificationToast: React.FC = () => {
-  const [notifications, setNotifications] = useState<NotificationData[]>([])
+  const [, setNotifications] = useState<NotificationData[]>([])
   const [currentNotification, setCurrentNotification] = useState<NotificationData | null>(null)
 
   useEffect(() => {
@@ -74,13 +74,13 @@ const NotificationToast: React.FC = () => {
   }
 
   return (
-    <Snackbar
-      open={!!currentNotification}
-      autoHideDuration={6000}
-      onClose={handleClose}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-    >
-      {currentNotification && (
+    currentNotification ? (
+      <Snackbar
+        open={true}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
         <Alert 
           onClose={handleClose} 
           severity={getSeverity(currentNotification.priority)}
@@ -115,8 +115,8 @@ const NotificationToast: React.FC = () => {
             />
           </Box>
         </Alert>
-      )}
-    </Snackbar>
+      </Snackbar>
+    ) : null
   )
 }
 

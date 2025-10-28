@@ -118,8 +118,8 @@ const Analytics: React.FC = () => {
                     <Box sx={{ 
                       p: 2, 
                       bgcolor: themeMode === 'dark' 
-                        ? `rgba(${trend.color?.slice(1).match(/.{2}/g)?.map(x => parseInt(x, 16)).join(',')}, 0.1)` 
-                        : `rgba(${trend.color?.slice(1).match(/.{2}/g)?.map(x => parseInt(x, 16)).join(',')}, 0.05)`,
+                        ? `rgba(${trend.color?.slice(1).match(/.{2}/g)?.map((x: string) => parseInt(x, 16)).join(',')}, 0.1)` 
+                        : `rgba(${trend.color?.slice(1).match(/.{2}/g)?.map((x: string) => parseInt(x, 16)).join(',')}, 0.05)`,
                       borderRadius: 1, 
                       border: `1px solid ${trend.color}30` 
                     }}>
@@ -213,7 +213,7 @@ const Analytics: React.FC = () => {
                 <CheckCircle /> Recommendations
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {mlPrediction.recommendations?.map((rec, index) => (
+                {mlPrediction.recommendations?.map((rec: string, index: number) => (
                   <Box key={index} sx={{ 
                     p: 2, 
                     bgcolor: themeMode === 'dark' ? 'rgba(0,255,136,0.05)' : 'rgba(0,255,136,0.03)', 

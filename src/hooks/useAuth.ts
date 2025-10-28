@@ -8,7 +8,7 @@ export const useAuth = () => {
   useEffect(() => {
     if (isAuthenticated && user) {
       // Connect to WebSocket when authenticated
-      wsService.connect(user.sub!)
+      wsService.connect()
       
       // Store auth token for API calls
       getAccessTokenSilently()

@@ -13,11 +13,9 @@ interface ValidationResult {
   warnings: string[]
 }
 
-const DataValidation: React.FC<DataValidationProps> = ({ patientData }) => {
+const DataValidation: React.FC<DataValidationProps> = ({ }) => {
   
   const validateDataForAnalysis = (): ValidationResult => {
-    const missingData: string[] = []
-    const warnings: string[] = []
     
     // Always return valid for now since we have mock data
     return {

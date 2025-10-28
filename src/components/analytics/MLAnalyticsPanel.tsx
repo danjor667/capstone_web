@@ -27,14 +27,14 @@ interface MLAnalyticsPanelProps {
 
 const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
   const themeMode = useSelector((state: RootState) => state.ui.theme)
-  const { data: prediction, isLoading, refetch } = useGetMLPredictionQuery(patientId)
+  const { data: prediction, isLoading, error: predictionError, refetch } = useGetMLPredictionQuery(patientId)
   const { data: patientData } = useGetPatientQuery(patientId)
   const [triggerAnalysis, { isLoading: isAnalyzing }] = useTriggerMLAnalysisMutation()
   const [lastAnalysis, setLastAnalysis] = useState<string | null>(null)
 
   const handleRunAnalysis = async () => {
     try {
-      const result = await triggerAnalysis(patientId).unwrap()
+      await triggerAnalysis(patientId).unwrap()
       setLastAnalysis(new Date().toLocaleString())
       refetch()
     } catch (error) {
@@ -110,7 +110,11 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
           </Button>
         </Box>
 
-        {prediction ? (
+        {predictionError ? (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            ML prediction service is currently unavailable. Please try again later.
+          </Alert>
+        ) : prediction ? (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -131,31 +135,31 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
               {/* Analysis Info */}
               <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
                 <Typography variant="caption" color="text.secondary">
-                  {new Date(prediction.timestamp).toLocaleString()} • Model: {prediction.model_version}
+                  {new Date(prediction.created_at).toLocaleString()} • Model: {prediction.model_version}
                 </Typography>
               </Box>
               
               <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
                 <Chip
-                  label={prediction.prediction.result}
+                  label={prediction.prediction_result || 'No Result'}
                   sx={{
-                    bgcolor: `${getStageColor(prediction.prediction.stage)}20`,
-                    color: getStageColor(prediction.prediction.stage),
-                    border: `1px solid ${getStageColor(prediction.prediction.stage)}40`,
+                    bgcolor: `${getStageColor(prediction.predicted_stage || 1)}20`,
+                    color: getStageColor(prediction.predicted_stage || 1),
+                    border: `1px solid ${getStageColor(prediction.predicted_stage || 1)}40`,
                     fontWeight: 600
                   }}
                 />
                 <Chip
-                  label={`${prediction.prediction.confidence}% Confidence`}
+                  label={`${prediction.confidence || 0}% Confidence`}
                   variant="outlined"
                   sx={{ color: themeMode === 'dark' ? '#94a3b8' : '#64748b' }}
                 />
                 <Chip
-                  label={`${prediction.prediction.riskLevel} Risk`}
+                  label={`${prediction.risk_level || 'Unknown'} Risk`}
                   sx={{
-                    bgcolor: `${getRiskColor(prediction.prediction.riskLevel)}20`,
-                    color: getRiskColor(prediction.prediction.riskLevel),
-                    border: `1px solid ${getRiskColor(prediction.prediction.riskLevel)}40`,
+                    bgcolor: `${getRiskColor(prediction.risk_level)}20`,
+                    color: getRiskColor(prediction.risk_level),
+                    border: `1px solid ${getRiskColor(prediction.risk_level)}40`,
                     fontWeight: 600
                   }}
                 />
@@ -167,37 +171,37 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
                 <Grid container spacing={2}>
                   <Grid item xs={6} sm={4}>
                     <Box sx={{ p: 2, bgcolor: themeMode === 'dark' ? 'rgba(255,170,0,0.1)' : 'rgba(255,170,0,0.05)', borderRadius: 1 }}>
-                      <Typography variant="h6" sx={{ color: '#ffaa00' }}>{prediction.input_metrics.eGFR}</Typography>
+                      <Typography variant="h6" sx={{ color: '#ffaa00' }}>{prediction.input_data?.eGFR || 'N/A'}</Typography>
                       <Typography variant="caption">eGFR</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={6} sm={4}>
                     <Box sx={{ p: 2, bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.05)', borderRadius: 1 }}>
-                      <Typography variant="h6" sx={{ color: '#ff4757' }}>{prediction.input_metrics.serumCreatinine}</Typography>
+                      <Typography variant="h6" sx={{ color: '#ff4757' }}>{prediction.input_data?.serumCreatinine || 'N/A'}</Typography>
                       <Typography variant="caption">Creatinine</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={6} sm={4}>
                     <Box sx={{ p: 2, bgcolor: themeMode === 'dark' ? 'rgba(0,212,255,0.1)' : 'rgba(0,212,255,0.05)', borderRadius: 1 }}>
-                      <Typography variant="h6" sx={{ color: '#00d4ff' }}>{prediction.input_metrics.bloodPressure}</Typography>
+                      <Typography variant="h6" sx={{ color: '#00d4ff' }}>{prediction.input_data?.bloodPressure || 'N/A'}</Typography>
                       <Typography variant="caption">Blood Pressure</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={6} sm={4}>
                     <Box sx={{ p: 2, bgcolor: themeMode === 'dark' ? 'rgba(147,51,234,0.1)' : 'rgba(147,51,234,0.05)', borderRadius: 1 }}>
-                      <Typography variant="h6" sx={{ color: '#9333ea' }}>{prediction.input_metrics.age}</Typography>
+                      <Typography variant="h6" sx={{ color: '#9333ea' }}>{prediction.input_data?.age || 'N/A'}</Typography>
                       <Typography variant="caption">Age</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={6} sm={4}>
                     <Box sx={{ p: 2, bgcolor: themeMode === 'dark' ? 'rgba(255,107,53,0.1)' : 'rgba(255,107,53,0.05)', borderRadius: 1 }}>
-                      <Typography variant="h6" sx={{ color: '#ff6b35' }}>{prediction.input_metrics.bloodUrea}</Typography>
+                      <Typography variant="h6" sx={{ color: '#ff6b35' }}>{prediction.input_data?.bloodUrea || 'N/A'}</Typography>
                       <Typography variant="caption">Blood Urea</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={6} sm={4}>
                     <Box sx={{ p: 2, bgcolor: themeMode === 'dark' ? 'rgba(0,255,136,0.1)' : 'rgba(0,255,136,0.05)', borderRadius: 1 }}>
-                      <Typography variant="h6" sx={{ color: '#00ff88' }}>{prediction.input_metrics.hemoglobin}</Typography>
+                      <Typography variant="h6" sx={{ color: '#00ff88' }}>{prediction.input_data?.hemoglobin || 'N/A'}</Typography>
                       <Typography variant="caption">Hemoglobin</Typography>
                     </Box>
                   </Grid>
@@ -210,7 +214,7 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
                 </Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={prediction.prediction.confidence || 0}
+                  value={prediction.confidence || 0}
                   sx={{
                     height: 8,
                     borderRadius: 4,
@@ -222,7 +226,7 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
                   }}
                 />
                 <Typography variant="caption" color="text.secondary">
-                  {prediction.prediction.confidence}%
+                  {prediction.confidence || 0}%
                 </Typography>
               </Box>
             </Box>

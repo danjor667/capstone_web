@@ -1,17 +1,28 @@
 import React from 'react'
-import { Box, Typography, Paper, Chip, Grid } from '@mui/material'
+import { Box, Typography, Paper, Chip, Grid, CircularProgress } from '@mui/material'
+import { useParams } from 'react-router-dom'
 import Scene from '../components/3d/Scene'
+import { useGetMLPredictionQuery, useGetKidneyMetricsQuery } from '../services/api'
 
 const Visualization: React.FC = () => {
-  // TODO: Get ML prediction result from state/API
-  const mlPrediction = {
-    isHealthy: false,
-    confidence: 0.87,
-    stage: 3,
-    eGFR: 45,
-    damage: 65,
-    inflammation: 55,
+  const { id } = useParams<{ id: string }>()
+  const { data: mlPrediction, isLoading: mlLoading } = useGetMLPredictionQuery(id || '', { skip: !id })
+  const { data: kidneyMetrics, isLoading: metricsLoading } = useGetKidneyMetricsQuery(id || '', { skip: !id })
+
+  if (mlLoading || metricsLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    )
   }
+
+  const isHealthy = mlPrediction?.predicted_stage <= 2
+  const confidence = mlPrediction?.confidence || 0
+  const stage = mlPrediction?.predicted_stage || kidneyMetrics?.stage || 1
+  const eGFR = kidneyMetrics?.eGFR || mlPrediction?.input_data?.eGFR || 90
+  const damage = stage >= 3 ? (stage - 1) * 20 : 10
+  const inflammation = mlPrediction?.risk_level === 'high' ? 70 : mlPrediction?.risk_level === 'medium' ? 40 : 20
 
   return (
     <Box>
@@ -29,16 +40,16 @@ const Visualization: React.FC = () => {
             </Box>
           </Box>
           <Chip
-            label={mlPrediction.isHealthy ? 'HEALTHY' : 'CKD DETECTED'}
+            label={isHealthy ? 'HEALTHY' : mlPrediction?.prediction_result || 'CKD DETECTED'}
             sx={{
-              bgcolor: mlPrediction.isHealthy ? '#00ff88' : '#ff4757',
+              bgcolor: isHealthy ? '#00ff88' : '#ff4757',
               color: '#000',
               fontWeight: 'bold',
               fontSize: '1.1rem',
               px: 3,
               py: 2.5,
               fontFamily: 'monospace',
-              boxShadow: mlPrediction.isHealthy ? '0 0 20px rgba(0, 255, 136, 0.5)' : '0 0 20px rgba(255, 71, 87, 0.5)',
+              boxShadow: isHealthy ? '0 0 20px rgba(0, 255, 136, 0.5)' : '0 0 20px rgba(255, 71, 87, 0.5)',
             }}
           />
         </Box>
@@ -52,7 +63,7 @@ const Visualization: React.FC = () => {
                 CKD STAGE
               </Typography>
               <Typography variant="h3" sx={{ color: '#00d4ff', fontFamily: 'monospace', fontWeight: 700 }}>
-                {mlPrediction.stage}
+                {stage}
               </Typography>
             </Box>
           </Grid>
@@ -62,7 +73,7 @@ const Visualization: React.FC = () => {
                 eGFR
               </Typography>
               <Typography variant="h3" sx={{ color: '#ff6b35', fontFamily: 'monospace', fontWeight: 700 }}>
-                {mlPrediction.eGFR}
+                {eGFR}
               </Typography>
             </Box>
           </Grid>
@@ -72,7 +83,7 @@ const Visualization: React.FC = () => {
                 CONFIDENCE
               </Typography>
               <Typography variant="h3" sx={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 700 }}>
-                {(mlPrediction.confidence * 100).toFixed(0)}%
+                {confidence}%
               </Typography>
             </Box>
           </Grid>
@@ -83,24 +94,21 @@ const Visualization: React.FC = () => {
         <Scene
           patientData={{
             kidneyMetrics: {
-              leftKidney: {
-                volume: 150,
-                bloodFlow: mlPrediction.isHealthy ? 600 : 400,
-                filtrationRate: mlPrediction.eGFR,
-                damage: mlPrediction.damage,
-                inflammation: mlPrediction.inflammation,
+              eGFR: eGFR,
+              creatinine: kidneyMetrics?.creatinine || mlPrediction?.input_data?.serumCreatinine || 1.5,
+              proteinuria: kidneyMetrics?.proteinuria || 300,
+              bloodPressure: {
+                systolic: kidneyMetrics?.bloodPressure?.systolic || 120,
+                diastolic: kidneyMetrics?.bloodPressure?.diastolic || 80
               },
-              rightKidney: {
-                volume: 150,
-                bloodFlow: mlPrediction.isHealthy ? 600 : 400,
-                filtrationRate: mlPrediction.eGFR,
-                damage: mlPrediction.damage,
-                inflammation: mlPrediction.inflammation,
+              stage: stage,
+              progression: {
+                trend: kidneyMetrics?.progression?.trend || 'stable',
+                rateOfChange: kidneyMetrics?.progression?.rateOfChange || 0,
+                predictedStage: stage,
+                riskFactors: []
               },
-              stage: mlPrediction.stage,
-              eGFR: mlPrediction.eGFR,
-              creatinine: 1.5,
-              proteinuria: 300,
+              lastUpdated: new Date().toISOString()
             },
           }}
         />

@@ -8,7 +8,7 @@ import {
   Button,
   Grid,
   MenuItem,
-  Box,
+
   Typography
 } from '@mui/material'
 import { useAddKidneyMetricsMutation } from '../../services/api'
