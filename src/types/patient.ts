@@ -11,7 +11,8 @@ export interface Demographics {
 export interface ContactInfo {
   email?: string
   phone?: string
-  address?: Address
+  address?: string
+  emergencyContact?: string
 }
 
 export interface Address {
@@ -68,9 +69,6 @@ export interface ImagingData {
 export interface PatientData {
   id: string
   demographics: Demographics
-  labResults: LabResult[]
-  medications: Medication[]
-  vitals: VitalSigns[]
-  imaging: ImagingData[]
-  kidneyMetrics: any
+  createdAt: string
+  updatedAt: string
 }

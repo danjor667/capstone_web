@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard'
 import PatientDetail from './pages/PatientDetail'
 import PatientMetrics from './pages/PatientMetrics'
 import Visualization from './pages/Visualization'
-import Analytics from './pages/Analytics'
+
 import Login from './pages/Login'
 import AuthService from './services/authService'
 import { wsService } from './services/websocket'
@@ -49,7 +49,7 @@ const App: React.FC = () => {
           <Route path="/patients/:id" element={<PatientDetail />} />
           <Route path="/patients" element={<PatientMetrics />} />
           <Route path="/3d-view" element={<Visualization />} />
-          <Route path="/analytics" element={<Analytics />} />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

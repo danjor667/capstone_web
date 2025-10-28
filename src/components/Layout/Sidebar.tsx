@@ -13,8 +13,7 @@ import {
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
-  Analytics as AnalyticsIcon,
-  Settings as SettingsIcon,
+
   ThreeDRotation as ViewIn3DIcon,
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
@@ -39,8 +38,6 @@ const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Patients', icon: <PeopleIcon />, path: '/patients' },
   { text: '3D Visualization', icon: <ViewIn3DIcon />, path: '/3d-view' },
-  { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
-  { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
 ]
 
 const Sidebar: React.FC<SidebarProps> = ({ open }) => {

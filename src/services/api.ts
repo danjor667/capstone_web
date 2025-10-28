@@ -25,24 +25,18 @@ export const apiSlice = createApi({
           return response.data.map((patient: any) => ({
             id: patient.id,
             demographics: {
+              id: patient.id,
               firstName: patient.first_name,
               lastName: patient.last_name,
               dateOfBirth: patient.date_of_birth,
               gender: patient.gender,
-              ethnicity: patient.ethnicity,
               contactInfo: {
                 email: patient.email,
                 phone: patient.phone,
-                address: {
-                  street: patient.street,
-                  city: patient.city,
-                  state: patient.state,
-                  zipCode: patient.zip_code,
-                  country: patient.country
-                }
+                address: typeof patient.address === 'string' ? patient.address : '',
+                emergencyContact: patient.emergency_contact
               }
             },
-            medicalHistory: patient.medical_history,
             createdAt: patient.created_at,
             updatedAt: patient.updated_at
           }))
@@ -52,30 +46,24 @@ export const apiSlice = createApi({
       providesTags: ['Patient'],
     }),
     searchPatients: builder.query<PatientData[], string>({
-      query: (searchTerm) => `/patients/search?q=${encodeURIComponent(searchTerm)}`,
+      query: (searchTerm) => `/patients/search/?q=${encodeURIComponent(searchTerm)}`,
       transformResponse: (response: any) => {
         if (response.success && Array.isArray(response.data)) {
           return response.data.map((patient: any) => ({
             id: patient.id,
             demographics: {
+              id: patient.id,
               firstName: patient.first_name,
               lastName: patient.last_name,
               dateOfBirth: patient.date_of_birth,
               gender: patient.gender,
-              ethnicity: patient.ethnicity,
               contactInfo: {
                 email: patient.email,
                 phone: patient.phone,
-                address: {
-                  street: patient.street,
-                  city: patient.city,
-                  state: patient.state,
-                  zipCode: patient.zip_code,
-                  country: patient.country
-                }
+                address: patient.address,
+                emergencyContact: patient.emergency_contact
               }
             },
-            medicalHistory: patient.medical_history,
             createdAt: patient.created_at,
             updatedAt: patient.updated_at
           }))
@@ -92,24 +80,18 @@ export const apiSlice = createApi({
           return {
             id: patient.id,
             demographics: {
+              id: patient.id,
               firstName: patient.first_name,
               lastName: patient.last_name,
               dateOfBirth: patient.date_of_birth,
               gender: patient.gender,
-              ethnicity: patient.ethnicity,
               contactInfo: {
                 email: patient.email,
                 phone: patient.phone,
-                address: {
-                  street: patient.street,
-                  city: patient.city,
-                  state: patient.state,
-                  zipCode: patient.zip_code,
-                  country: patient.country
-                }
+                address: patient.address,
+                emergencyContact: patient.emergency_contact
               }
             },
-            medicalHistory: patient.medical_history,
             createdAt: patient.created_at,
             updatedAt: patient.updated_at
           }
@@ -129,7 +111,8 @@ export const apiSlice = createApi({
           gender: patientData.gender,
           email: patientData.email,
           phone: patientData.phone,
-          medical_history: patientData.medicalHistory || {}
+          address: patientData.address,
+          emergency_contact: patientData.emergencyContact
         },
       }),
       transformResponse: (response: any) => {
@@ -138,24 +121,18 @@ export const apiSlice = createApi({
           return {
             id: patient.id,
             demographics: {
+              id: patient.id,
               firstName: patient.first_name,
               lastName: patient.last_name,
               dateOfBirth: patient.date_of_birth,
               gender: patient.gender,
-              ethnicity: patient.ethnicity,
               contactInfo: {
                 email: patient.email,
                 phone: patient.phone,
-                address: {
-                  street: patient.street,
-                  city: patient.city,
-                  state: patient.state,
-                  zipCode: patient.zip_code,
-                  country: patient.country
-                }
+                address: patient.address,
+                emergencyContact: patient.emergency_contact
               }
             },
-            medicalHistory: patient.medical_history,
             createdAt: patient.created_at,
             updatedAt: patient.updated_at
           }
@@ -178,7 +155,15 @@ export const apiSlice = createApi({
       query: (patientId) => `/patients/${patientId}/metrics/`,
       transformResponse: (response: any) => {
         if (response.success && response.data) {
-          return response.data
+          return {
+            eGFR: response.data.egfr,
+            creatinine: response.data.creatinine,
+            bun: response.data.bun,
+            stage: response.data.stage,
+            trend: response.data.trend,
+            rateOfChange: response.data.rate_of_change,
+            lastUpdated: response.data.timestamp
+          }
         }
         return null
       },
@@ -194,11 +179,19 @@ export const apiSlice = createApi({
       },
       providesTags: (_result, _error, patientId) => [{ type: 'KidneyMetrics', id: patientId }],
     }),
-    addKidneyMetrics: builder.mutation<KidneyMetrics, { patientId: string; data: Partial<KidneyMetrics> }>({
+    addKidneyMetrics: builder.mutation<KidneyMetrics, { patientId: string; data: any }>({
       query: ({ patientId, data }) => ({
         url: `/patients/${patientId}/metrics/`,
         method: 'POST',
-        body: data,
+        body: {
+          egfr: data.egfr,
+          creatinine: data.creatinine,
+          bun: data.bun,
+          stage: data.stage,
+          trend: data.trend,
+          rate_of_change: data.rate_of_change,
+          timestamp: new Date().toISOString()
+        },
       }),
       invalidatesTags: (_result, _error, { patientId }) => [{ type: 'KidneyMetrics', id: patientId }],
     }),
@@ -211,12 +204,11 @@ export const apiSlice = createApi({
           return response.data.map((result: any) => ({
             id: result.id,
             testName: result.test_name,
-            value: result.value,
+            value: result.test_value,
             unit: result.unit,
             testDate: result.test_date,
-            category: result.category,
-            normalRange: result.normal_range,
-            isAbnormal: result.is_abnormal
+            referenceRange: result.reference_range,
+            notes: result.notes
           }))
         }
         return []
@@ -229,10 +221,11 @@ export const apiSlice = createApi({
         method: 'POST',
         body: {
           test_name: data.testName,
-          value: data.value,
+          test_value: data.value,
           unit: data.unit,
           test_date: data.testDate,
-          category: data.category
+          reference_range: data.referenceRange,
+          notes: data.notes
         },
       }),
       invalidatesTags: (_result, _error, { patientId }) => [{ type: 'LabResult', id: patientId }],
@@ -287,6 +280,12 @@ export const apiSlice = createApi({
         url: `/patients/${patientId}/analyze/`,
         method: 'POST',
       }),
+      transformResponse: (response: any) => {
+        if (response.success && response.data) {
+          return response.data
+        }
+        return null
+      },
       invalidatesTags: (_result, _error, patientId) => [{ type: 'MLPrediction', id: patientId }],
     }),
     getRiskFactors: builder.query<any[], string>({
@@ -315,11 +314,10 @@ export const apiSlice = createApi({
         if (response.success && Array.isArray(response.data)) {
           return response.data.map((alert: any) => ({
             id: alert.id,
-            type: alert.type,
+            type: alert.alert_type,
             title: alert.title,
             message: alert.message,
             priority: alert.priority,
-            category: alert.category,
             acknowledged: alert.acknowledged,
             acknowledgedBy: alert.acknowledged_by,
             acknowledgedAt: alert.acknowledged_at,
@@ -347,12 +345,39 @@ export const apiSlice = createApi({
       invalidatesTags: ['Alert'],
     }),
 
+    // Vitals endpoints
+    getVitals: builder.query<any[], string>({
+      query: (patientId) => `/patients/${patientId}/vitals/`,
+      transformResponse: (response: any) => {
+        if (response.success && Array.isArray(response.data)) {
+          return response.data
+        }
+        return []
+      },
+    }),
+    addVitals: builder.mutation<any, { patientId: string; data: any }>({
+      query: ({ patientId, data }) => ({
+        url: `/patients/${patientId}/vitals/`,
+        method: 'POST',
+        body: {
+          systolic_bp: data.systolicBp,
+          diastolic_bp: data.diastolicBp,
+          heart_rate: data.heartRate,
+          temperature: data.temperature,
+          weight: data.weight,
+          height: data.height,
+          timestamp: new Date().toISOString()
+        },
+      }),
+      invalidatesTags: (_result, _error, { patientId }) => [{ type: 'Patient', id: patientId }],
+    }),
+    
     // 3D model data
     getKidneyGeometry: builder.query<any, void>({
       query: () => '/models/kidney-geometry/',
     }),
     getPatient3DData: builder.query<any, string>({
-      query: (patientId) => `/patients/${patientId}/3d-data/`,
+      query: (patientId) => `/models/patients/${patientId}/3d-data/`,
     }),
   }),
 })
@@ -370,6 +395,8 @@ export const {
   useAddLabResultMutation,
   useGetMedicationsQuery,
   useAddMedicationMutation,
+  useGetVitalsQuery,
+  useAddVitalsMutation,
   useGetMLPredictionQuery,
   useTriggerMLAnalysisMutation,
   useGetRiskFactorsQuery,
