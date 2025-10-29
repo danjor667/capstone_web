@@ -3,6 +3,7 @@ import { Box } from '@mui/material'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../store/store'
 import Sidebar from './Sidebar'
+import Header from './Header'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -19,8 +20,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           minHeight: '100vh',
+          paddingTop: sidebarOpen ? 0 : '64px', // Add padding when header is visible
         }}
       >
+        <Header />
         {children}
       </Box>
     </Box>
