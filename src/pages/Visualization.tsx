@@ -21,8 +21,7 @@ const Visualization: React.FC = () => {
   const confidence = mlPrediction?.confidence || 0
   const stage = mlPrediction?.predicted_stage || kidneyMetrics?.stage || 1
   const eGFR = kidneyMetrics?.eGFR || mlPrediction?.input_data?.eGFR || 90
-  const damage = stage >= 3 ? (stage - 1) * 20 : 10
-  const inflammation = mlPrediction?.risk_level === 'high' ? 70 : mlPrediction?.risk_level === 'medium' ? 40 : 20
+
 
   return (
     <Box>
