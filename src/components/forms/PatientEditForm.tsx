@@ -31,7 +31,9 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
     dateOfBirth: '',
     gender: '',
     address: '',
-    emergencyContact: ''
+    emergencyContact: '',
+    dietQuality: '',
+    familyHistoryKidneyDisease: false
   })
 
   useEffect(() => {
@@ -44,15 +46,18 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
         dateOfBirth: patient.demographics.dateOfBirth,
         gender: patient.demographics.gender,
         address: patient.demographics.contactInfo.address || '',
-        emergencyContact: patient.demographics.contactInfo.emergencyContact || ''
+        emergencyContact: patient.demographics.contactInfo.emergencyContact || '',
+        dietQuality: (patient as any).dietQuality || '',
+        familyHistoryKidneyDisease: (patient as any).familyHistoryKidneyDisease || false
       })
     }
   }, [patient])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value
     })
   }
 
@@ -64,19 +69,16 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
       await updatePatient({
         id: patient.id,
         data: {
-          demographics: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            dateOfBirth: formData.dateOfBirth,
-            gender: formData.gender,
-            contactInfo: {
-              email: formData.email,
-              phone: formData.phone,
-              address: formData.address,
-              emergencyContact: formData.emergencyContact
-            }
-          }
-        } as Partial<PatientData>
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          dateOfBirth: formData.dateOfBirth,
+          gender: formData.gender,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          dietQuality: parseInt(formData.dietQuality) || undefined,
+          familyHistoryKidneyDisease: formData.familyHistoryKidneyDisease
+        }
       }).unwrap()
       
       onSuccess()
@@ -97,7 +99,9 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
         dateOfBirth: patient.demographics.dateOfBirth,
         gender: patient.demographics.gender,
         address: patient.demographics.contactInfo.address || '',
-        emergencyContact: patient.demographics.contactInfo.emergencyContact || ''
+        emergencyContact: patient.demographics.contactInfo.emergencyContact || '',
+        dietQuality: (patient as any).dietQuality || '',
+        familyHistoryKidneyDisease: (patient as any).familyHistoryKidneyDisease || false
       })
     }
   }
@@ -202,6 +206,37 @@ const PatientEditForm: React.FC<PatientEditFormProps> = ({ open, onClose, patien
                 fullWidth
                 placeholder="Name - Phone Number"
               />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="dietQuality"
+                label="Diet Quality Assessment"
+                select
+                value={formData.dietQuality}
+                onChange={handleChange}
+                fullWidth
+                helperText="Overall dietary habits and nutrition quality"
+              >
+                <MenuItem value="1">1 - Poor</MenuItem>
+                <MenuItem value="2">2 - Fair</MenuItem>
+                <MenuItem value="3">3 - Good</MenuItem>
+                <MenuItem value="4">4 - Very Good</MenuItem>
+                <MenuItem value="5">5 - Excellent</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="familyHistoryKidneyDisease"
+                label="Family History of Kidney Disease"
+                select
+                value={formData.familyHistoryKidneyDisease ? 'true' : 'false'}
+                onChange={(e) => setFormData({ ...formData, familyHistoryKidneyDisease: e.target.value === 'true' })}
+                fullWidth
+                helperText="Any family history of kidney disease"
+              >
+                <MenuItem value="false">No</MenuItem>
+                <MenuItem value="true">Yes</MenuItem>
+              </TextField>
             </Grid>
           </Grid>
         </DialogContent>

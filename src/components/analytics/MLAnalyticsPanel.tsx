@@ -17,7 +17,7 @@ import {
 import { Psychology, Warning, Refresh } from '@mui/icons-material'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../store/store'
-import { useGetMLPredictionQuery, useTriggerMLAnalysisMutation, useGetPatientQuery } from '../../services/api'
+import { useGetMLPredictionQuery, useTriggerMLAnalysisMutation, useGetPatientQuery, useValidatePatientDataQuery } from '../../services/api'
 import DataValidation from './DataValidation'
 import PredictionHistory from './PredictionHistory'
 
@@ -29,11 +29,18 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
   const themeMode = useSelector((state: RootState) => state.ui.theme)
   const { data: prediction, isLoading, error: predictionError, refetch } = useGetMLPredictionQuery(patientId)
   const { data: patientData } = useGetPatientQuery(patientId)
+  const { data: validationData } = useValidatePatientDataQuery(patientId)
   const [triggerAnalysis, { isLoading: isAnalyzing }] = useTriggerMLAnalysisMutation()
   const [lastAnalysis, setLastAnalysis] = useState<string | null>(null)
 
   const handleRunAnalysis = async () => {
     try {
+      // Check validation data first
+      if (!validationData?.is_ready_for_prediction) {
+        console.warn('Patient data incomplete:', validationData?.missing_data)
+        return
+      }
+      
       await triggerAnalysis(patientId).unwrap()
       setLastAnalysis(new Date().toLocaleString())
       refetch()
@@ -84,7 +91,8 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
             : '#ffffff',
           border: themeMode === 'dark' 
             ? '1px solid rgba(147,51,234,0.3)' 
-            : '1px solid rgba(147,51,234,0.2)'
+            : '1px solid rgba(147,51,234,0.2)',
+          position: 'relative'
         }}>
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -100,13 +108,15 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
           <Button
             variant="contained"
             onClick={handleRunAnalysis}
-            disabled={isAnalyzing}
+            disabled={isAnalyzing || !validationData?.is_ready_for_prediction}
             sx={{
               bgcolor: '#9333ea',
               '&:hover': { bgcolor: '#7c3aed' }
             }}
           >
-            {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
+            {isAnalyzing ? 'Analyzing...' : 
+             !validationData?.is_ready_for_prediction ? 'Data Incomplete' :
+             'Run Analysis'}
           </Button>
         </Box>
 
@@ -296,10 +306,35 @@ const MLAnalyticsPanel: React.FC<MLAnalyticsPanelProps> = ({ patientId }) => {
         )}
 
         {isAnalyzing && (
-          <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <CircularProgress size={20} />
-            <Typography variant="body2" color="text.secondary">
-              Analyzing patient data with AI model...
+          <Box sx={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: themeMode === 'dark' ? 'rgba(15,23,42,0.9)' : 'rgba(255,255,255,0.9)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 1,
+            zIndex: 10
+          }}>
+            <Box sx={{ 
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%': { transform: 'scale(1)', opacity: 1 },
+                '50%': { transform: 'scale(1.1)', opacity: 0.7 },
+                '100%': { transform: 'scale(1)', opacity: 1 }
+              }
+            }}>
+              <CircularProgress size={40} sx={{ color: '#9333ea' }} />
+            </Box>
+            <Typography variant="h6" sx={{ mt: 2, color: '#9333ea', fontWeight: 600 }}>
+              Analyzing with AI...
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
+              Processing patient data through machine learning model
             </Typography>
           </Box>
         )}

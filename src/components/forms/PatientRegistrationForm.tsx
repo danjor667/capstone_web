@@ -8,9 +8,7 @@ import {
   Button,
   Grid,
   MenuItem,
-  Box,
-  Typography,
-  Chip
+  Typography
 } from '@mui/material'
 import { useCreatePatientMutation } from '../../services/api'
 
@@ -34,58 +32,45 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
     gender: '',
     email: '',
     phone: '',
-    medicalHistory: {
-      conditions: [] as string[],
-      allergies: [] as string[],
-      familyHistory: [] as string[]
-    }
+    address: '',
+    emergencyContact: '',
+    familyHistoryKidneyDisease: false,
+    dietQuality: '',
+    edema: false,
+    muscleCramps: false,
+    itching: false
   })
 
-  const [newCondition, setNewCondition] = useState('')
-  const [newAllergy, setNewAllergy] = useState('')
-  const [newFamilyHistory, setNewFamilyHistory] = useState('')
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await createPatient(formData).unwrap()
+      await createPatient({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        emergencyContact: formData.emergencyContact,
+        family_history_kidney_disease: formData.familyHistoryKidneyDisease,
+        diet_quality: parseInt(formData.dietQuality) || 3
+      }).unwrap()
       onSuccess?.()
       onClose()
       setFormData({
-        firstName: '',
-        lastName: '',
-        dateOfBirth: '',
-        gender: '',
-        email: '',
-        phone: '',
-        medicalHistory: { conditions: [], allergies: [], familyHistory: [] }
+        firstName: '', lastName: '', dateOfBirth: '', gender: '', email: '', phone: '',
+        address: '', emergencyContact: '', familyHistoryKidneyDisease: false, dietQuality: '',
+        edema: false, muscleCramps: false, itching: false
       })
     } catch (error) {
       console.error('Failed to create patient:', error)
     }
   }
 
-  const addToArray = (field: 'conditions' | 'allergies' | 'familyHistory', value: string) => {
-    if (value.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        medicalHistory: {
-          ...prev.medicalHistory,
-          [field]: [...prev.medicalHistory[field], value.trim()]
-        }
-      }))
-    }
-  }
 
-  const removeFromArray = (field: 'conditions' | 'allergies' | 'familyHistory', index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      medicalHistory: {
-        ...prev.medicalHistory,
-        [field]: prev.medicalHistory[field].filter((_, i) => i !== index)
-      }
-    }))
-  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -155,130 +140,61 @@ const PatientRegistrationForm: React.FC<PatientRegistrationFormProps> = ({
                 required
               />
             </Grid>
-
-            {/* Medical History */}
             <Grid item xs={12}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Medical History</Typography>
+              <TextField
+                fullWidth
+                label="Address"
+                value={formData.address}
+                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                multiline
+                rows={2}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Emergency Contact"
+                value={formData.emergencyContact}
+                onChange={(e) => setFormData(prev => ({ ...prev, emergencyContact: e.target.value }))}
+                placeholder="Name - Phone Number"
+              />
             </Grid>
 
-            {/* Conditions */}
+            {/* ML Prediction Data */}
             <Grid item xs={12}>
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Add Medical Condition"
-                  value={newCondition}
-                  onChange={(e) => setNewCondition(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addToArray('conditions', newCondition)
-                      setNewCondition('')
-                    }
-                  }}
-                  placeholder="e.g., Hypertension, Diabetes"
-                />
-                <Button 
-                  onClick={() => {
-                    addToArray('conditions', newCondition)
-                    setNewCondition('')
-                  }}
-                  sx={{ mt: 1 }}
-                >
-                  Add Condition
-                </Button>
-              </Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.medicalHistory.conditions.map((condition, index) => (
-                  <Chip
-                    key={index}
-                    label={condition}
-                    onDelete={() => removeFromArray('conditions', index)}
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>Health Assessment</Typography>
             </Grid>
-
-            {/* Allergies */}
-            <Grid item xs={12}>
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Add Allergy"
-                  value={newAllergy}
-                  onChange={(e) => setNewAllergy(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addToArray('allergies', newAllergy)
-                      setNewAllergy('')
-                    }
-                  }}
-                  placeholder="e.g., Penicillin, Shellfish"
-                />
-                <Button 
-                  onClick={() => {
-                    addToArray('allergies', newAllergy)
-                    setNewAllergy('')
-                  }}
-                  sx={{ mt: 1 }}
-                >
-                  Add Allergy
-                </Button>
-              </Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.medicalHistory.allergies.map((allergy, index) => (
-                  <Chip
-                    key={index}
-                    label={allergy}
-                    onDelete={() => removeFromArray('allergies', index)}
-                    color="error"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Diet Quality"
+                value={formData.dietQuality}
+                onChange={(e) => setFormData(prev => ({ ...prev, dietQuality: e.target.value }))}
+                helperText="Overall dietary habits"
+                required
+              >
+                <MenuItem value="1">1 - Poor</MenuItem>
+                <MenuItem value="2">2 - Fair</MenuItem>
+                <MenuItem value="3">3 - Good</MenuItem>
+                <MenuItem value="4">4 - Very Good</MenuItem>
+                <MenuItem value="5">5 - Excellent</MenuItem>
+              </TextField>
             </Grid>
-
-            {/* Family History */}
-            <Grid item xs={12}>
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Add Family History"
-                  value={newFamilyHistory}
-                  onChange={(e) => setNewFamilyHistory(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addToArray('familyHistory', newFamilyHistory)
-                      setNewFamilyHistory('')
-                    }
-                  }}
-                  placeholder="e.g., Diabetes, Heart Disease"
-                />
-                <Button 
-                  onClick={() => {
-                    addToArray('familyHistory', newFamilyHistory)
-                    setNewFamilyHistory('')
-                  }}
-                  sx={{ mt: 1 }}
-                >
-                  Add Family History
-                </Button>
-              </Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.medicalHistory.familyHistory.map((history, index) => (
-                  <Chip
-                    key={index}
-                    label={history}
-                    onDelete={() => removeFromArray('familyHistory', index)}
-                    color="secondary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Family History of Kidney Disease"
+                value={formData.familyHistoryKidneyDisease ? 'yes' : 'no'}
+                onChange={(e) => setFormData(prev => ({ ...prev, familyHistoryKidneyDisease: e.target.value === 'yes' }))}
+                required
+              >
+                <MenuItem value="no">No</MenuItem>
+                <MenuItem value="yes">Yes</MenuItem>
+              </TextField>
             </Grid>
           </Grid>
         </DialogContent>

@@ -49,6 +49,7 @@ const App: React.FC = () => {
           <Route path="/patients/:id" element={<PatientDetail />} />
           <Route path="/patients" element={<PatientMetrics />} />
           <Route path="/3d-view" element={<Visualization />} />
+          <Route path="/3d-view/:id" element={<Visualization />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

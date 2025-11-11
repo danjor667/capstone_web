@@ -3,7 +3,7 @@ import { Box, Typography, Card, CardContent, Grid, Chip, LinearProgress, Avatar,
 import { TrendingUp, TrendingDown, Assessment, Timeline, Warning, CheckCircle } from '@mui/icons-material'
 import { useSelector } from 'react-redux'
 import { RootState } from '../store/store'
-import { useGetPatientsQuery, useGetMLPredictionQuery, useGetRiskFactorsQuery, useGetTrendsQuery } from '../services/api'
+import { useGetPatientsQuery, useGetMLPredictionQuery, useGetRiskFactorsQuery, useGetTrendsQuery, useValidatePatientDataQuery } from '../services/api'
 
 const Analytics: React.FC = () => {
   const themeMode = useSelector((state: RootState) => state.ui.theme)
@@ -11,6 +11,10 @@ const Analytics: React.FC = () => {
   // Fetch real data from backend
   const { data: patients } = useGetPatientsQuery()
   const currentPatient = patients?.[0]
+  const { data: validationData } = useValidatePatientDataQuery(
+    currentPatient?.id || '', 
+    { skip: !currentPatient?.id }
+  )
   const { data: mlPrediction, isLoading: predictionLoading } = useGetMLPredictionQuery(
     currentPatient?.id || '', 
     { skip: !currentPatient?.id }
@@ -75,25 +79,30 @@ const Analytics: React.FC = () => {
                 <Assessment sx={{ fontSize: 30 }} />
               </Avatar>
               <Typography variant="h6" sx={{ color: '#ff4757', mb: 1 }}>ML Prediction</Typography>
-              <Chip label={mlPrediction.prediction.result} sx={{ 
+              <Chip label={mlPrediction?.result || 'No Prediction'} sx={{ 
                 bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.2)' : 'rgba(255,71,87,0.1)', 
                 color: '#ff4757', 
                 mb: 2 
               }} />
               <Box sx={{ mb: 2 }}>
                 <Typography variant="h3" sx={{ color: '#ff4757', fontWeight: 700 }}>
-                  {Math.round(mlPrediction.prediction.confidence * 100)}%
+                  {Math.round((mlPrediction?.confidence || 0) * 100)}%
                 </Typography>
                 <Typography variant="caption" color="text.secondary">Confidence Level</Typography>
               </Box>
               <LinearProgress 
                 variant="determinate" 
-                value={mlPrediction.prediction.confidence * 100} 
+                value={(mlPrediction?.confidence || 0) * 100} 
                 sx={{ 
                   bgcolor: themeMode === 'dark' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.08)', 
                   '& .MuiLinearProgress-bar': { bgcolor: '#ff4757' } 
                 }} 
               />
+              {validationData && !validationData.is_ready_for_prediction && (
+                <Typography variant="caption" sx={{ color: '#ffaa00', mt: 1, display: 'block' }}>
+                  Data incomplete ({Math.round(validationData.completeness_score)}%)
+                </Typography>
+              )}
             </CardContent>
           </Card>
         </Grid>

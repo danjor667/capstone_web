@@ -10,12 +10,15 @@ import {
 } from '@mui/icons-material'
 import { 
   useGetPatientQuery, useGetKidneyMetricsQuery, useGetVitalsQuery, 
-  useGetMedicationsQuery, useGetMLPredictionQuery 
+  useGetMedicationsQuery, useGetMLPredictionQuery, useValidatePatientDataQuery,
+  useGetLabResultsQuery
 } from '../services/api'
 import MLAnalyticsPanel from '../components/analytics/MLAnalyticsPanel'
 import KidneyMetricsForm from '../components/forms/KidneyMetricsForm'
 import VitalsForm from '../components/forms/VitalsForm'
 import PatientEditForm from '../components/forms/PatientEditForm'
+import LabResultsForm from '../components/forms/LabResultsForm'
+import MedicalHistoryForm from '../components/forms/MedicalHistoryForm'
 import Scene from '../components/3d/Scene'
 
 const PatientDetail: React.FC = () => {
@@ -25,11 +28,18 @@ const PatientDetail: React.FC = () => {
   const { data: kidneyMetrics } = useGetKidneyMetricsQuery(id || '', { skip: !id })
   const { data: vitals } = useGetVitalsQuery(id || '', { skip: !id })
   const { data: medications } = useGetMedicationsQuery(id || '', { skip: !id })
+  const { data: labResults, isLoading: labLoading, error: labError } = useGetLabResultsQuery(id || '', { skip: !id })
+  
+  // Debug logging
+  console.log('Lab Results Debug:', { labResults, labLoading, labError })
+  const { data: validationData } = useValidatePatientDataQuery(id || '', { skip: !id })
   useGetMLPredictionQuery(id || '', { skip: !id })
   
   const [showMetricsForm, setShowMetricsForm] = useState(false)
   const [showVitalsForm, setShowVitalsForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showLabForm, setShowLabForm] = useState(false)
+  const [showHistoryForm, setShowHistoryForm] = useState(false)
 
   if (isLoading) {
     return (
@@ -115,6 +125,20 @@ const PatientDetail: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
+        {/* Data Completeness Alert */}
+        {validationData && !validationData.is_ready_for_prediction && (
+          <Grid item xs={12}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                ML Prediction Data Incomplete ({Math.round(validationData.completeness_score)}% complete)
+              </Typography>
+              <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+                Missing: {validationData.missing_data?.join(', ')}
+              </Typography>
+            </Alert>
+          </Grid>
+        )}
+        
         <Grid container spacing={3}>
             {/* Vital Signs */}
             <Grid item xs={12}>
@@ -214,7 +238,7 @@ const PatientDetail: React.FC = () => {
                   
                   {kidneyMetrics ? (
                     <Grid container spacing={2}>
-                      <Grid item xs={6} md={3}>
+                      <Grid item xs={6} md={2.4}>
                         <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(245, 158, 11, 0.1)', borderRadius: 1 }}>
                           <Typography variant="h5" sx={{ color: '#f59e0b', fontWeight: 700 }}>
                             {kidneyMetrics?.eGFR || 'N/A'}
@@ -222,7 +246,7 @@ const PatientDetail: React.FC = () => {
                           <Typography variant="caption">eGFR (mL/min/1.73m²)</Typography>
                         </Box>
                       </Grid>
-                      <Grid item xs={6} md={3}>
+                      <Grid item xs={6} md={2.4}>
                         <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', borderRadius: 1 }}>
                           <Typography variant="h5" sx={{ color: '#ef4444', fontWeight: 700 }}>
                             {kidneyMetrics?.creatinine || 'N/A'}
@@ -230,15 +254,16 @@ const PatientDetail: React.FC = () => {
                           <Typography variant="caption">Creatinine (mg/dL)</Typography>
                         </Box>
                       </Grid>
-                      <Grid item xs={6} md={3}>
-                        <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(255, 107, 53, 0.1)', borderRadius: 1 }}>
-                          <Typography variant="h5" sx={{ color: '#ff6b35', fontWeight: 700 }}>
-                            {kidneyMetrics?.bun || 'N/A'}
+
+                      <Grid item xs={6} md={2.4}>
+                        <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(138, 43, 226, 0.1)', borderRadius: 1 }}>
+                          <Typography variant="h5" sx={{ color: '#8a2be2', fontWeight: 700 }}>
+                            {kidneyMetrics?.proteinuria || 'N/A'}
                           </Typography>
-                          <Typography variant="caption">BUN (mg/dL)</Typography>
+                          <Typography variant="caption">Proteinuria (mg/g)</Typography>
                         </Box>
                       </Grid>
-                      <Grid item xs={6} md={3}>
+                      <Grid item xs={6} md={2.4}>
                         <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(59, 130, 246, 0.1)', borderRadius: 1 }}>
                           <Typography variant="h5" sx={{ color: '#3b82f6', fontWeight: 700 }}>
                             Stage {kidneyMetrics?.stage || 'N/A'}
@@ -248,20 +273,73 @@ const PatientDetail: React.FC = () => {
                       </Grid>
                     </Grid>
                   ) : (
-                    <Alert severity="info">No kidney metrics recorded. Click "Add Metrics" to record measurements.</Alert>
+                    <Alert severity="info">No kidney metrics recorded. Click "Add Metrics" to record eGFR, creatinine, and proteinuria measurements.</Alert>
                   )}
                 </CardContent>
               </Card>
             </Grid>
 
-            {/* Medications & 3D Model Row */}
-            <Grid item xs={12} md={4}>
+            {/* Lab Results */}
+            <Grid item xs={12} md={6}>
               <Card sx={{ height: 320 }}>
                 <CardContent>
-                  <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Medication sx={{ color: '#10b981' }} />
-                    Medications
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Science sx={{ color: '#8b5cf6' }} />
+                      Lab Results
+                    </Typography>
+                    <Button
+                      size="small"
+                      startIcon={<Add />}
+                      onClick={() => setShowLabForm(true)}
+                      sx={{ color: '#3b82f6' }}
+                    >
+                      Add Labs
+                    </Button>
+                  </Box>
+                  
+                  {labResults && labResults.length > 0 ? (
+                    <>
+                      <Typography variant="caption" sx={{ color: 'green', mb: 1, display: 'block' }}>Found {labResults.length} lab results</Typography>
+                    <List dense>
+                      {labResults.slice(0, 5).map((lab) => (
+                        <ListItem key={lab.id} sx={{ px: 0, py: 0.5 }}>
+                          <ListItemText
+                            primary={<Typography variant="body2" sx={{ fontWeight: 600 }}>{lab.testName || lab.test_name}</Typography>}
+                            secondary={<Typography variant="caption">{lab.value || lab.test_value} {lab.unit}</Typography>}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                    </>
+                  ) : (
+                    <>
+                      <Alert severity="info">No lab results recorded. Click "Add Labs" to add required tests.</Alert>
+                      <Typography variant="caption" sx={{ color: 'red', mt: 1, display: 'block' }}>Debug: labResults = {JSON.stringify(labResults)}</Typography>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            {/* Medical History */}
+            <Grid item xs={12} md={6}>
+              <Card sx={{ height: 320 }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Medication sx={{ color: '#10b981' }} />
+                      Medical History
+                    </Typography>
+                    <Button
+                      size="small"
+                      startIcon={<Add />}
+                      onClick={() => setShowHistoryForm(true)}
+                      sx={{ color: '#3b82f6' }}
+                    >
+                      Add History
+                    </Button>
+                  </Box>
                   
                   {medications && medications?.length > 0 ? (
                     <List dense>
@@ -275,9 +353,7 @@ const PatientDetail: React.FC = () => {
                       ))}
                     </List>
                   ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No medications recorded
-                    </Typography>
+                    <Alert severity="info">No medical history recorded. Click "Add History" to complete patient profile.</Alert>
                   )}
                 </CardContent>
               </Card>
@@ -310,6 +386,7 @@ const PatientDetail: React.FC = () => {
         open={showMetricsForm}
         onClose={() => setShowMetricsForm(false)}
         patientId={id || ''}
+        currentMetrics={kidneyMetrics}
         onSuccess={() => setShowMetricsForm(false)}
       />
       
@@ -318,6 +395,20 @@ const PatientDetail: React.FC = () => {
         onClose={() => setShowVitalsForm(false)}
         patientId={id || ''}
         onSuccess={() => setShowVitalsForm(false)}
+      />
+      
+      <LabResultsForm
+        open={showLabForm}
+        onClose={() => setShowLabForm(false)}
+        patientId={id || ''}
+        onSuccess={() => setShowLabForm(false)}
+      />
+      
+      <MedicalHistoryForm
+        open={showHistoryForm}
+        onClose={() => setShowHistoryForm(false)}
+        patientId={id || ''}
+        onSuccess={() => setShowHistoryForm(false)}
       />
       
       <PatientEditForm
