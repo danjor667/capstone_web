@@ -384,6 +384,7 @@ export const apiSlice = createApi({
         return null
       },
     }),
+
     getMLPredictionHistory: builder.query<any[], string>({
       query: (patientId) => `/ml/patients/${patientId}/predictions/history/`,
       transformResponse: (response: any) => {
@@ -507,6 +508,7 @@ export const {
   useGetMLPredictionQuery,
   useTriggerMLAnalysisMutation,
   useGetMLModelMetricsQuery,
+
   useGetMLPredictionHistoryQuery,
   useGetRiskFactorsQuery,
   useGetTrendsQuery,

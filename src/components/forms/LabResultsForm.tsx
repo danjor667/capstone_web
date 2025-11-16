@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Grid, Typography, Divider
+  TextField, Button, Grid, Typography
 } from '@mui/material'
 import { useAddLabResultMutation } from '../../services/api'
 

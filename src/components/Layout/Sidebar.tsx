@@ -13,8 +13,8 @@ import {
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
-
   ThreeDRotation as ViewIn3DIcon,
+  Psychology as PsychologyIcon,
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
   AccountCircle,
@@ -38,6 +38,7 @@ const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Patients', icon: <PeopleIcon />, path: '/patients' },
   { text: '3D Visualization', icon: <ViewIn3DIcon />, path: '/3d-view' },
+  { text: 'Model Info', icon: <PsychologyIcon />, path: '/model-info' },
 ]
 
 const Sidebar: React.FC<SidebarProps> = ({ open }) => {

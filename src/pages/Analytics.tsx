@@ -1,9 +1,11 @@
 import React from 'react'
 import { Box, Typography, Card, CardContent, Grid, Chip, LinearProgress, Avatar, CircularProgress } from '@mui/material'
-import { TrendingUp, TrendingDown, Assessment, Timeline, Warning, CheckCircle } from '@mui/icons-material'
+import { TrendingUp, TrendingDown, Assessment, Timeline, Warning, CheckCircle, ThreeDRotation } from '@mui/icons-material'
 import { useSelector } from 'react-redux'
 import { RootState } from '../store/store'
-import { useGetPatientsQuery, useGetMLPredictionQuery, useGetRiskFactorsQuery, useGetTrendsQuery, useValidatePatientDataQuery } from '../services/api'
+import { useGetPatientsQuery, useGetMLPredictionQuery, useGetRiskFactorsQuery, useGetTrendsQuery, useValidatePatientDataQuery, useGetMLModelMetricsQuery } from '../services/api'
+import PatientKidney3D from '../components/3d/PatientKidney3D'
+import ModelMetricsCard from '../components/analytics/ModelMetricsCard'
 
 const Analytics: React.FC = () => {
   const themeMode = useSelector((state: RootState) => state.ui.theme)
@@ -27,6 +29,7 @@ const Analytics: React.FC = () => {
     currentPatient?.id || '', 
     { skip: !currentPatient?.id }
   )
+  const { data: modelMetrics } = useGetMLModelMetricsQuery()
 
   if (predictionLoading) {
     return (
@@ -153,6 +156,57 @@ const Analytics: React.FC = () => {
               </Grid>
             </CardContent>
           </Card>
+        </Grid>
+
+        {/* Patient-Specific 3D Kidney */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ 
+            background: themeMode === 'dark' 
+              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' 
+              : '#ffffff',
+            border: themeMode === 'dark' 
+              ? '1px solid rgba(255,107,157,0.3)' 
+              : '1px solid rgba(255,107,157,0.2)',
+            height: '350px'
+          }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ color: '#ff6b9d', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ThreeDRotation /> Patient Kidney Model
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                AI-generated visualization based on ML prediction
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <PatientKidney3D mlPrediction={mlPrediction} width={200} height={200} />
+                <Box sx={{ flex: 1, pl: 1 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Visual Indicators</Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, fontSize: '0.75rem' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 12, height: 12, bgcolor: '#ff6b9d', borderRadius: '50%' }} />
+                      <Typography variant="caption">Healthy (Stage 0-1)</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 12, height: 12, bgcolor: '#ffb347', borderRadius: '50%' }} />
+                      <Typography variant="caption">Mild Damage (Stage 2)</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 12, height: 12, bgcolor: '#ff8c42', borderRadius: '50%' }} />
+                      <Typography variant="caption">Moderate (Stage 3)</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 12, height: 12, bgcolor: '#d2691e', borderRadius: '50%' }} />
+                      <Typography variant="caption">Severe (Stage 4-5)</Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* ML Model Quick Stats */}
+        <Grid item xs={12} md={6}>
+          <ModelMetricsCard modelMetrics={modelMetrics} />
         </Grid>
 
         {/* Risk Factors */}

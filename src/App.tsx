@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import PatientDetail from './pages/PatientDetail'
 import PatientMetrics from './pages/PatientMetrics'
 import Visualization from './pages/Visualization'
+import ModelInfo from './pages/ModelInfo'
 
 import Login from './pages/Login'
 import AuthService from './services/authService'
@@ -50,6 +51,7 @@ const App: React.FC = () => {
           <Route path="/patients" element={<PatientMetrics />} />
           <Route path="/3d-view" element={<Visualization />} />
           <Route path="/3d-view/:id" element={<Visualization />} />
+          <Route path="/model-info" element={<ModelInfo />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
