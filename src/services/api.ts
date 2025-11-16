@@ -5,7 +5,7 @@ import { KidneyMetrics, AlertData } from '../types/medical'
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: (import.meta as any).env?.VITE_API_URL || 'https://capstone-project-yb98.onrender.com/api',
+    baseUrl: 'https://capstone-project-yb98.onrender.com/api',
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('token')
       if (token) {
@@ -15,6 +15,7 @@ export const apiSlice = createApi({
       return headers
     },
   }),
+  keepUnusedDataFor: 0,
   tagTypes: ['Patient', 'KidneyMetrics', 'Alert', 'LabResult', 'MLPrediction', 'Medication'],
   endpoints: (builder) => ({
     // Patient endpoints
