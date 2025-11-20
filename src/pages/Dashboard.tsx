@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                    {mlMetrics?.performance?.accuracy ? `${mlMetrics.performance.accuracy.toFixed(1)}%` : '--'}
+                    {mlMetrics?.performance_metrics?.accuracy ? `${mlMetrics.performance_metrics.accuracy.toFixed(1)}%` : '--'}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     AI Accuracy

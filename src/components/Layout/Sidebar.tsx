@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
 
   const handleLogout = () => {
     AuthService.logout()
-    window.location.href = '/login'
+    window.location.reload()
   }
 
   return (
